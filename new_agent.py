@@ -223,7 +223,7 @@ class MyPlayer(BasePokerPlayer):
         pass
     
     def consult_ai(self):
-        pos=input("Please enter your position(0=SB, 1=BB)")
+        pos=input("Please enter your position(0=SB, 1=BB):")
         while not pos.isdigit() or (int(pos)!=0 and int(pos)!=1):
             pos=input("Wrong format. Please enter again:")
         hole_card=[None, None]
@@ -249,7 +249,7 @@ class MyPlayer(BasePokerPlayer):
                     action=input("Wrong format. Please enter again:")
                 if action=="r":
                     amount=input("Please enter the amount your opponent paid in total this round:")
-                    if not amount.isdigit() or int(amount)<self.pot_info["paid_cur"][1-self.pos]:
+                    while not amount.isdigit() or int(amount)<self.pot_info["paid"][self.pos]:
                         amount=input("Wrong format. Please enter again:")
                 if action=="f":
                     print(f"Congratulations! You won {self.pot_info["paid"][1-self.pos]}!")
@@ -278,6 +278,10 @@ class MyPlayer(BasePokerPlayer):
                     self.pot_info['raise_cur'][1-self.pos]+=raise_amount
                     if oppraise==False:
                         print("Only recommendation:call")
+                        pay_amount=int(amount)-self.pot_info["paid"][self.pos]
+                        self.pot_info["pot"]+=pay_amount
+                        self.pot_info["paid"][self.pos]+=pay_amount
+                        self.pot_info["paid_cur"][self.pos]+=pay_amount
                         break
                     oppraise=False
                     self.curnode=self.curnode.tonextstate(action)
@@ -302,17 +306,23 @@ class MyPlayer(BasePokerPlayer):
                     winrate=preflop_winrate.lookup(min(rank[0],rank[1]),max(rank[0],rank[1]))
                 self.prestate=min(3,int(4*winrate))
                 action=self.curnode.chooseaction(cardtype, 0)
-                print("recommended action:" + action)
+                if action=='raise1/2' or action=='raise1':
+                    total_amount=self.pot_info["paid"][1-self.pos]+(int(self.pot_info["pot"]/2) if action=='raise1/2' else self.pot_info["pot"])
+                print("recommended action:" + action, end='')
+                if action=='raise1/2' or action=='raise1':
+                    print(" ("+str(total_amount)+")")
+                else:
+                    print("")
 
                 action=input("Please enter your real behavior(f=fold, c=call, r=raise or allin):")
                 while action!="f" and action!="c" and action!="r" and action!="allin":
                     action=input("Wrong format. Please enter again:")
                 if action=="r":
                     amount=input("Please enter the amount you paid in total this round:")
-                    if not amount.isdigit() or int(amount)<self.pot_info["paid_cur"][1-self.pos]:
+                    while not amount.isdigit() or int(amount)<self.pot_info["paid"][1-self.pos]:
                         amount=input("Wrong format. Please enter again:")
                 if action=="f":
-                    print(f"Unfortunately you lost {self.pot_info["paid"][self.pos]}.")
+                    print(f"Unfortunately you lost {self.pot_info["paid"][self.pos]} :(")
                     return
                 elif action=="c":
                     pay_amount=self.pot_info["paid"][1-self.pos]-self.pot_info["paid"][self.pos]
@@ -365,7 +375,7 @@ class MyPlayer(BasePokerPlayer):
                         action=input("Wrong format. Please enter again:")
                     if action=="r":
                         amount=input("Please enter the amount your opponent paid in total this round:")
-                        if not amount.isdigit() or int(amount)<self.pot_info["paid_cur"][1-self.pos]:
+                        if not amount.isdigit() or int(amount)<self.pot_info["paid"][self.pos]:
                             amount=input("Wrong format. Please enter again:")
                     if action=="f":
                         print(f"Congratulations! You won {self.pot_info["paid"][1-self.pos]}!")
@@ -394,6 +404,10 @@ class MyPlayer(BasePokerPlayer):
                         self.pot_info['raise_cur'][1-self.pos]+=raise_amount
                         if oppraise==False:
                             print("Only recommendation:call")
+                            pay_amount=int(amount)-self.pot_info["paid"][self.pos]
+                            self.pot_info["pot"]+=pay_amount
+                            self.pot_info["paid"][1-self.pos]+=pay_amount
+                            self.pot_info["paid_cur"][1-self.pos]+=pay_amount
                             break
                         oppraise=False
                         self.curnode=self.curnode.tonextstate(action)
@@ -413,17 +427,23 @@ class MyPlayer(BasePokerPlayer):
                     self.prestate=min(3,int(4*winrate))
                     cardtype=min(4,int(5*winrate))
                     action=self.curnode.chooseaction(cardtype, state_num)
-                    print("recommended action:" + action)
+                    if action=='raise1/2' or action=='raise1':
+                        total_amount=self.pot_info["paid"][1-self.pos]+(int(self.pot_info["pot"]/2) if action=='raise1/2' else self.pot_info["pot"])
+                    print("recommended action:" + action, end='')
+                    if action=='raise1/2' or action=='raise1':
+                        print(" ("+str(total_amount)+")")
+                    else:
+                        print("")
 
                     action=input("Please enter your real behavior(f=fold, c=call, r=raise or allin):")
                     while action!="f" and action!="c" and action!="r" and action!="allin":
                         action=input("Wrong format. Please enter again:")
                     if action=="r":
                         amount=input("Please enter the amount you paid in total this round:")
-                        if not amount.isdigit() or int(amount)<self.pot_info["paid_cur"][1-self.pos]:
+                        while not amount.isdigit() or int(amount)<self.pot_info["paid"][1-self.pos]:
                             amount=input("Wrong format. Please enter again:")
                     if action=="f":
-                        print(f"Unfortunately you lost {self.pot_info["paid"][self.pos]}.")
+                        print(f"Unfortunately you lost {self.pot_info["paid"][self.pos]} :(")
                         return
                     elif action=="c":
                         pay_amount=self.pot_info["paid"][1-self.pos]-self.pot_info["paid"][self.pos]
@@ -493,7 +513,7 @@ class MyPlayer(BasePokerPlayer):
         elif my_value==opp_value:
             print("This game ended in a draw")
         else:
-            print(f"Unfortunately you lost {self.pot_info["paid"][self.pos]}.")
+            print(f"Unfortunately you lost {self.pot_info["paid"][self.pos]} :(")
         return
 
 
